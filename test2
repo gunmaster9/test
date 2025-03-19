@@ -1,0 +1,31 @@
+export creds="sysdba/sysdba@UTIB"
+
+sql_path="./alt_mod_pre_migration"
+lst_path="./LST_mod"
+stat_file="./STAT/Parallel.stat"
+mkdir LST_mod
+mkdir STAT
+pid_list=""
+
+for rec in `ls $sql_path/*.sql`
+do
+               file=`echo $rec | awk -F'/' '{print $3}'`
+               file_stat=`grep $file $stat_file 2>/dev/null | wc -l`
+               
+               if [ $file_stat -eq 0 ]; then
+                              echo $file
+                              echo "$file|"`date +%d-%m-%Y"|"%H:%M:%S` >> $stat_file
+                              #nohup sqlplus $creds @$sql_path/$file "$lst_path/$file.lst" &
+							  nohup ./Run_SQL_Tbaadm.sh $sql_path/$file "$lst_path/$file.lst" &
+                              pid_list=${pid_list}" "$!
+                              sleep 2
+               else
+                              echo $file" already executed"
+               fi             
+done      
+
+
+echo "\n Waiting for background processes to complete" 
+wait $pid_list
+
+echo "\n All sqls completed"
