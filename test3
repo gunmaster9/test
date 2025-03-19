@@ -1,0 +1,13 @@
+
+sqlplus $creds <<-EOF
+
+set echo on time on timi on lin 1000 
+spool $2
+
+alter session set current_schema=crmuser;
+
+@$1
+
+spool off
+quit
+EOF
